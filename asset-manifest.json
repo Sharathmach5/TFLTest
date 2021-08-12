@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/TFLTest/static/css/main.24904614.chunk.css",
+    "main.js": "/TFLTest/static/js/main.d03c5bee.chunk.js",
+    "main.js.map": "/TFLTest/static/js/main.d03c5bee.chunk.js.map",
+    "runtime~main.js": "/TFLTest/static/js/runtime~main.91e57101.js",
+    "runtime~main.js.map": "/TFLTest/static/js/runtime~main.91e57101.js.map",
+    "static/js/2.7b9eddc1.chunk.js": "/TFLTest/static/js/2.7b9eddc1.chunk.js",
+    "static/js/2.7b9eddc1.chunk.js.map": "/TFLTest/static/js/2.7b9eddc1.chunk.js.map",
+    "index.html": "/TFLTest/index.html",
+    "precache-manifest.86214e204a9bc40ff00164d798a561f8.js": "/TFLTest/precache-manifest.86214e204a9bc40ff00164d798a561f8.js",
+    "service-worker.js": "/TFLTest/service-worker.js",
+    "static/css/main.24904614.chunk.css.map": "/TFLTest/static/css/main.24904614.chunk.css.map"
+  }
+}
