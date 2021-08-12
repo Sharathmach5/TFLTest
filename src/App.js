@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-
-/**
- * Map components
- */
-import { Map, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
-import MarkerClusterGroup from "react-leaflet-markercluster";
+import List from '@material-ui/core/List';
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 
 /**
  * Material UI
@@ -25,21 +23,30 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 /**
  * Custom components
  */
-import StationList from "./components/StationsList";
+import LineComponent from "./components/LineComponent";
+
 
 /**
  * Api
  */
 import API from "./utils/api";
+import { Palette } from "@material-ui/icons";
 
 /**
- * Fixture apis can be used as well here for tests
+ * create function returns a list of {getBikePoints, getLines, getAirQuality}
+
+    you can use these functions below using api.functionname. You can add more functions to api.js file
+    to handle new apicalls. Project open for extension.
  */
 const api = API.create();
 
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1
+  },
+  airqualitygridcontainerroot:{
+    backgroundColor:'steelblue', width:'100%', marginTop: '20px', marginLeft: '10px',
+    paddingLeft:'30px', paddingRight: '30px', paddingTop: '15px', paddingBottom:'15px',
   },
   menuButton: {
     marginRight: theme.spacing(2)
@@ -77,7 +84,10 @@ function App() {
   const classes = useStyles();
   const [fetching, setFetching] = useState(false);
   const [bikePoints, setBikePoints] = useState();
+  const [streetName, setStreetName] = useState();
   const [lines, setLines] = useState();
+  const [airQuality, setAirQuality] = useState();
+  //console.log('inside app' + lines);
   const [errorSnack, setErrorSnack] = useState({
     visible: false,
     content: ""
@@ -87,7 +97,7 @@ function App() {
    * Tabs state
    */
   const [value, setValue] = useState(0);
-
+  
   function handleChange(event, newValue) {
     switch (newValue) {
       case 0:
@@ -95,6 +105,9 @@ function App() {
         break;
       case 1:
         fetchLines();
+        break;        
+      case 2:
+        fetchAirQuality();
         break;
       default:
         break;
@@ -102,11 +115,16 @@ function App() {
     setValue(newValue);
   }
 
+  const styleInfo = {
+    paddingRight:'10px'
+  }
+
   const fetchBikePoints = () => {
     setFetching(true);
     api.getBikePoints().then(result => {
       if (result.ok) {
         setBikePoints(result.data);
+        console.log(result.data);
         setFetching(false);
       } else {
         setErrorSnack({ visible: true, content: result.problem });
@@ -120,6 +138,7 @@ function App() {
     api.getLines().then(result => {
       if (result.ok) {
         setLines(result.data);
+       // console.log(result.data);
         setFetching(false);
       } else {
         setErrorSnack({ visible: true, content: result.problem });
@@ -128,21 +147,100 @@ function App() {
     });
   };
 
+  const fetchAirQuality = () => {
+    setFetching(true);
+    api.getAirQuality().then(result => {
+      if (result.ok) {
+        setAirQuality(result.data)
+        setFetching(false);
+      } else {
+        setErrorSnack({ visible: true, content: result.problem });
+        setFetching(false);
+      }
+    });
+  }
+
+  
+
+  //below useEffect Hoook is used to call fetchBikePoints() function when the component completes mounting
+  //or fetchBikePoints() function is called in componentDidMount() function.
+  //here it is called so that bikepoints can load upon first loading the page.
   useEffect(() => {
     fetchBikePoints();
+    fetchAirQuality();
   }, []);
 
-  const renderPoints = () =>
-    bikePoints.map((point, _) => (
-      <Marker key={point.id} position={[point.lat, point.lon]}>
-        <Tooltip direction="bottom">{point.placeType}</Tooltip>
-        <Popup>{point.commonName}</Popup>
-      </Marker>
-    ));
+
+  function handleSearch(event){
+    console.log(event.target.value);
+    setStreetName(event.target.value);
+  }
+  const renderFilteredBikePoints = () =>
+    bikePoints.filter((point)=>point.commonName.includes(streetName)).map((points, _) => (
+      <div>
+      <List
+      component="nav"
+      aria-labelledby="nested-list-subheader"
+      className={classes.root}>
+      <ListItem
+          dense
+          divider
+          alignItems="center"
+          justify="center"
+        >
+        <ListItemText primary={points.commonName} />
+        <ListItemSecondaryAction key={points.id}>
+          <ListItemText
+            primary={points.url}
+            align="center"
+          />
+        </ListItemSecondaryAction>
+      </ListItem>
+    </List>
+    </div>
+  ));
+
+  //rendering third tab. it has grid layout with griditems.
+  const renderAirQuality = () => (
+       <div>
+          <Grid container className={classes.airqualitygridcontainerroot} spacing={3} justifyContent="space-between" >
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                  <Typography variant={'h6'} style={{fontWeight:500}}>Forecast: {airQuality.currentForecast[0].forecastType}</Typography>
+                </Paper>
+             </Grid>
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                  <Typography variant={'h6'} style={{fontWeight:500}}>Forecast: {airQuality.currentForecast[1].forecastType}</Typography>
+                </Paper>
+             </Grid>
+
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                  <Typography variant={'body1'} style={{fontWeight:500}}>{airQuality.currentForecast[0].forecastSummary}</Typography>
+                 </Paper>
+             </Grid>
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                  <Typography variant={'body1'} style={{fontWeight:500}}>{airQuality.currentForecast[1].forecastSummary}</Typography>
+                 </Paper>
+             </Grid>
+
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                   <Typography variant={'body2'} style={{fontWeight:500}}><div dangerouslySetInnerHTML={ {__html: airQuality.currentForecast[0].forecastText} }/></Typography>
+                 </Paper>
+             </Grid>
+             <Grid item xs={6}>
+               <Paper className={classes.paper} elevation={2}>
+                   <Typography variant={'body2'} style={{fontWeight:500}}><div dangerouslySetInnerHTML={ {__html: airQuality.currentForecast[1].forecastText} }/></Typography>
+                 </Paper>
+             </Grid>
+          </Grid>
+       </div>
+  );
 
   const onSnackClose = () => setErrorSnack({ visible: false, content: "" });
-
-  const position = [51.509865, -0.118092];
 
   return (
     <div className="App">
@@ -153,10 +251,10 @@ function App() {
           variant="query"
         />
       )}
-      <AppBar position="fixed">
+      <AppBar position="fixed" style={{backgroundColor: '#002D72'}}>
         <Toolbar>
           <Typography variant="h6" className={classes.title}>
-            TFL API
+            Transport for London by Sharath
           </Typography>
         </Toolbar>
       </AppBar>
@@ -164,52 +262,37 @@ function App() {
         <Grid item xs={12}>
           <Paper className={classes.paper}>
             <Tabs value={value} onChange={handleChange}>
-              <Tab label="Bike points" />
+              <Tab label="Search Bike points" />
               <Tab label="Line status" />
+              <Tab label='Air Quality Index' />
             </Tabs>
             {value === 0 && (
               <div className={classes.tabContainer}>
-                <Map
-                  center={position}
-                  zoom={12}
-                  maxZoom={20}
-                  attributionControl
-                  zoomControl
-                  doubleClickZoom
-                  scrollWheelZoom
-                  dragging
-                  animate
-                  bounceAtZoomLimits
-                  easeLinearity={0.35}
-                >
-                  <TileLayer url="http://{s}.tile.osm.org/{z}/{x}/{y}.png" />
-                  <MarkerClusterGroup>
-                    {bikePoints && renderPoints()}
-                  </MarkerClusterGroup>
-                </Map>
+              <div>
+              <input type="text" placeholder="Search by street name"  onChange={handleSearch} />
+              {bikePoints && streetName && renderFilteredBikePoints()}
+              </div>
               </div>
             )}
 
             {value === 1 && (
               <div className={classes.tabContainer}>
-                <StationList
+                <LineComponent
                   title="London underground lines status"
                   lines={lines}
                 />
               </div>
             )}
+
+            {
+              value === 2 && (
+                <div className={classes.tabContainer}>
+                  {renderAirQuality()}
+                </div>
+              )}
           </Paper>
         </Grid>
       </Grid>
-      <div className={classes.footer}>
-        <Typography variant="body1">
-          Made with{" "}
-          <span role="img" aria-label="heart">
-            ❤️
-          </span>{" "}
-          by Amur Anzorov
-        </Typography>
-      </div>
       <Snackbar
         open={errorSnack.visible}
         onClose={onSnackClose}
